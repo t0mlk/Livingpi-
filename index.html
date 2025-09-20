@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="title_home">Startseite</title>
+  <link rel="stylesheet" href="style.css?v=2002">
+</head>
+<body>
+
+<!-- NAVBAR: bleibt oben, über allem -->
+<nav class="menunav" aria-label="Hauptnavigation">
+  <div class="navbar-content">
+    <div class="logo" id="siteLogo">
+      <img src="logo.svg" alt="" aria-hidden="true">
+      <span class="logo-text">– Living Pi</span>
+    </div>
+
+    <div class="nav-links">
+      <a href="index.html" class="active" data-i18n="nav_home">Home</a>
+      <a href="minispiele.html" data-i18n="nav_minigames">Mini-Spiele</a>
+      <a href="projekt.html" data-i18n="nav_project">Projekt</a>
+      <a href="kontakt.html" data-i18n="nav_contact">Kontakt</a>
+      <a href="#paypal" data-i18n="nav_paypal">PayPal</a>
+    </div>
+
+    <button class="burger" id="burger" aria-label="Menü" aria-expanded="false" aria-controls="menuOverlay">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- OVERLAY: unter der Navbar, kein zweites Logo -->
+<div class="menu-overlay" id="menuOverlay" aria-hidden="true">
+  <ul class="overlay-menu" role="menu">
+    <li role="none"><a role="menuitem" href="index.html" data-i18n="nav_home">Home</a></li>
+    <li role="none"><a role="menuitem" href="minispiele.html" data-i18n="nav_minigames">Mini-Spiele</a></li>
+    <li role="none"><a role="menuitem" href="projekt.html" data-i18n="nav_project">Projekt</a></li>
+    <li role="none"><a role="menuitem" href="kontakt.html" data-i18n="nav_contact">Kontakt</a></li>
+    <li role="none"><a role="menuitem" href="#paypal" data-i18n="nav_paypal">PayPal</a></li>
+  </ul>
+  <div class="overlay-sep"></div>
+  <button id="langToggle" class="overlay-lang" type="button">DE</button>
+</div>
+
+<main class="content">
+  <div class="scoreboard">
+    <div class="card">
+      <div class="label"><em data-i18n="game1">Speeding Bird</em></div>
+      <div class="box" data-i18n="highscore1">Highscore 1</div>
+    </div>
+    <div class="card">
+      <div class="label"><em data-i18n="game2">Jump To The Sky</em></div>
+      <div class="box" data-i18n="highscore2">Highscore 2</div>
+    </div>
+  </div>
+
+  <div class="image-card">
+    <div class="label"><em data-i18n="label_school">Unsere Schule</em></div>
+    <div class="image-link" id="schoolBanner">
+      <img src="IMG_8844.jpeg" alt="Bild meiner Schule">
+    </div>
+  </div>
+
+  <div class="txt">
+    <p data-i18n-html="home_intro">
+      In der <a href="https://www.erasmus-kittler-schule.de">Erasmus-Kittler-Schule</a> lernt ihr vieles über Datenbanken, Netzwerke, Webanwendungen und Projekte.<br>
+      Mit geschulten Lehrkräften werdet ihr unterstützt und auf Prüfungen vorbereitet.<br>
+      Mit ihnen erstellt ihr <a href="projekt.html">Projekte</a> wie dieses hier.
+    </p>
+  </div>
+</main>
+
+<footer class="site-footer" id="paypal">
+  <a href="https://paypal.me/tioxy8" target="_blank" class="paypal-link">
+    <img src="IMG_8863.png" alt="PayPal Me">
+  </a>
+  <p>© 2025 Living Pi – Alle Rechte vorbehalten</p>
+</footer>
+
+<!-- Externe JS (optional, empfohlen) -->
+<script src="main.js?v=2002"></script>
+
+
+</body>
+</html>
