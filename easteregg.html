@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Mini Space Blaster</title>
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --panel: #111827cc;
+      --accent: #60a5fa;
+      --good: #34d399;
+      --bad: #f87171;
+      --text: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(1200px 600px at 50% 20%, #0e1726 0%, #0b0f1a 60%, #090d15 100%);
+      color: var(--text);
+      font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif
+    }
+
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      height: 100%
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      gap: 8px
+    }
+
+    header .title {
+      font-weight: 700;
+      letter-spacing: .3px
+    }
+
+    header .stats {
+      display: flex;
+      gap: 12px;
+      align-items: center
+    }
+
+    .pill {
+      background: var(--panel);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 14px
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid #1f2937;
+      background: #0d1321;
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer
+    }
+
+    .btn:hover {
+      filter: brightness(1.1)
+    }
+
+    .btn:active {
+      transform: translateY(1px)
+    }
+
+    /* Neu: etwas mehr Luft nach oben */
+    .canvas-wrap {
+      position: relative;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 8px 8px;
+      /* vorher 8px – jetzt +40px top */
+    }
+
+    canvas {
+      width: min(100%, 800px);
+      height: calc(min(100vh - 210px, 70vh));
+      background: transparent;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px #0006
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #0b0f1aaa, #0b0f1acc);
+      backdrop-filter: blur(6px);
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 5;
+      /* Neu: liegt sicher über dem Canvas */
+      pointer-events: auto;
+      /* Neu: nimmt Klicks sicher an */
+    }
+
+    .overlay .card {
+      max-width: 520px;
+      width: 100%;
+      background: #0d1423;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 18px 16px;
+      text-align: center;
+      box-shadow: 0 8px 30px #0008
+    }
+
+    .card h1 {
+      margin: 6px 0 10px;
+      font-size: 22px
+    }
+
+    .card p {
+      margin: 0 0 14px;
+      color: #cbd5e1
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap
+    }
+
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: #0b1222;
+      border: 1px solid #1f2937;
+      color: #cbd5e1
+    }
+
+    .score {
+      color: var(--good)
+    }
+
+    .lives {
+      color: var(--bad)
+    }
+
+    /* Mobile controls */
+    .controls {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1.2fr;
+      gap: 10px;
+      padding: 10px 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .ctrl {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      background: #0d1321;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 14px 12px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .ctrl:active {
+      transform: translateY(1px)
+    }
+
+    .ctrl.small {
+      font-size: 14px
+    }
+
+    .hide-mobile {
+      display: block
+    }
+
+    @media (hover:none) and (pointer:coarse) {
+      .hide-mobile {
+        display: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">🚀 Mini Space Blaster</div>
+      <div class="stats">
+        <div class="pill">Score: <span id="uiScore">0</span></div>
+        <div class="pill">Leben: <span id="uiLives">3</span></div>
+        <div class="pill hide-mobile">Level: <span id="uiLevel">1</span></div>
+        <button class="btn" id="btnPause">Pause</button>
+        <button class="btn" id="btnRestart">Neu</button>
+      </div>
+    </header>
+
+    <div class="canvas-wrap">
+      <canvas id="game" width="800" height="600" aria-label="Spielbereich"></canvas>
+
+      <!-- Ursprünglich: hidden-Attribut. Wir lassen es weg und steuern über JS. -->
+      <div id="overlay" class="overlay">
+        <div class="card">
+          <h1 id="ovTitle">Mini Space Blaster</h1>
+          <p id="ovMsg">Steuere mit <span class="kbd">←</span> <span class="kbd">→</span> und feuere mit <span
+              class="kbd">Leertaste</span>.
+            Verhindere, dass die Blöcke dich treffen.</p>
+          <p class="small">Auf Touch-Geräten nutze die Buttons unten.</p>
+          <div class="row" style="margin-top:10px">
+            <button id="ovStart" class="btn">Starten</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl" id="btnLeft">◀︎</button>
+      <button class="ctrl" id="btnFire">FIRE</button>
+      <button class="ctrl" id="btnRight">▶︎</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ----- Canvas & DPI scaling -----
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+
+      function resizeCanvasToDisplaySize() {
+        const cssWidth = canvas.clientWidth;
+        const cssHeight = canvas.clientHeight;
+        const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+        const needResize = canvas.width !== Math.floor(cssWidth * dpr) || canvas.height !== Math.floor(cssHeight * dpr);
+        if (needResize) {
+          canvas.width = Math.floor(cssWidth * dpr);
+          canvas.height = Math.floor(cssHeight * dpr);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
+        }
+        return needResize;
+      }
+      resizeCanvasToDisplaySize();
+      window.addEventListener('resize', resizeCanvasToDisplaySize);
+
+      // ----- Game state -----
+      const state = {
+        running: false,
+        paused: false,
+        score: 0,
+        lives: 3,
+        level: 1,
+        time: 0,
+        nextEnemyIn: 0,
+        enemyInterval: 900, // ms, will scale with level
+        enemies: [],
+        bullets: [],
+        keys: { left: false, right: false, fire: false },
+        lastShot: 0,
+        shotCooldown: 180, // ms
+      };
+
+      // Player
+      const player = {
+        x: 380, y: 540, w: 36, h: 16, speed: 300, color: '#60a5fa'
+      };
+
+      // Helpers
+      const rand = (min, max) => Math.random() * (max - min) + min;
+      function rectsOverlap(a, b) {
+        return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+      }
+      function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+      // ----- Input (Keyboard) -----
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'ArrowLeft' || e.key === 'ArrowLeft') { state.keys.left = true; e.preventDefault(); }
+        if (e.code === 'ArrowRight' || e.key === 'ArrowRight') { state.keys.right = true; e.preventDefault(); }
+        if (e.code === 'Space' || e.key === ' ') { state.keys.fire = true; e.preventDefault(); }
+        if (e.code === 'KeyP') { togglePause(); }
+      });
+      window.addEventListener('keyup', (e) => {
+        if (e.code === 'ArrowLeft' || e.key === 'ArrowLeft') state.keys.left = false;
+        if (e.code === 'ArrowRight' || e.key === 'ArrowRight') state.keys.right = false;
+        if (e.code === 'Space' || e.key === ' ') state.keys.fire = false;
+      });
+
+      // ----- Input (Touch Buttons) -----
+      const btnLeft = document.getElementById('btnLeft');
+      const btnRight = document.getElementById('btnRight');
+      const btnFire = document.getElementById('btnFire');
+
+      function holdButton(btn, on, off) {
+        const down = (e) => { on(); e.preventDefault(); };
+        const up = (e) => { off(); e.preventDefault(); };
+        btn.addEventListener('touchstart', down, { passive: false });
+        btn.addEventListener('mousedown', down);
+        window.addEventListener('touchend', up, { passive: false });
+        window.addEventListener('mouseup', up);
+        window.addEventListener('touchcancel', up, { passive: false });
+        btn.addEventListener('contextmenu', e => e.preventDefault());
+      }
+
+      holdButton(btnLeft, () => state.keys.left = true, () => state.keys.left = false);
+      holdButton(btnRight, () => state.keys.right = true, () => state.keys.right = false);
+      holdButton(btnFire, () => state.keys.fire = true, () => state.keys.fire = false);
+
+      // ----- UI -----
+      const uiScore = document.getElementById('uiScore');
+      const uiLives = document.getElementById('uiLives');
+      const uiLevel = document.getElementById('uiLevel');
+      const btnPause = document.getElementById('btnPause');
+      const btnRestart = document.getElementById('btnRestart');
+      const overlay = document.getElementById('overlay');
+      const ovTitle = document.getElementById('ovTitle');
+      const ovMsg = document.getElementById('ovMsg');
+      const ovStart = document.getElementById('ovStart');
+
+      function showOverlay(title, msg, startText = 'Starten') {
+        ovTitle.textContent = title;
+        ovMsg.innerHTML = msg;
+        ovStart.textContent = startText;
+        overlay.style.display = 'flex';
+      }
+      function hideOverlay() {
+        overlay.style.display = 'none';
+      }
+
+      function updateUI() {
+        uiScore.textContent = state.score;
+        uiLives.textContent = state.lives;
+        uiLevel.textContent = state.level;
+        btnPause.textContent = state.paused ? 'Fortsetzen' : 'Pause';
+      }
+
+      // ----- Game control -----
+      function startGame() {
+        state.running = true;
+        state.paused = false;
+        state.score = 0;
+        state.lives = 3;
+        state.level = 1;
+        state.time = 0;
+        state.enemies = [];
+        state.bullets = [];
+        state.enemyInterval = 900;
+        state.nextEnemyIn = 300;
+        player.x = (canvas.clientWidth - player.w) / 2;
+        player.y = canvas.clientHeight - 60;
+        hideOverlay();
+        updateUI();
+        lastFrameTime = performance.now();
+        requestAnimationFrame(loop);
+      }
+
+      function gameOver() {
+        state.running = false;
+        showOverlay('Game Over',
+          `Score: <span class="score">${state.score}</span> – Level: ${state.level}<br>Drücke <span class="kbd">Neu</span> oder <span class="kbd">Starten</span>, um es erneut zu versuchen.`,
+          'Nochmal');
+      }
+
+      function togglePause() {
+        if (!state.running) return;
+        state.paused = !state.paused;
+        if (state.paused) {
+          showOverlay('Pausiert', 'Drücke <span class="kbd">Fortsetzen</span> oder <span class="kbd">P</span>, um weiterzuspielen.', 'Fortsetzen');
+        } else {
+          hideOverlay();
+          lastFrameTime = performance.now();
+          requestAnimationFrame(loop);
+        }
+        updateUI();
+      }
+
+      btnPause.addEventListener('click', togglePause);
+      btnRestart.addEventListener('click', () => { showOverlay('Neustart', 'Viel Erfolg, Pilot!'); });
+
+      // WICHTIG: Start-Button startet JEDESMAL das Spiel (ohne Bedingungen)
+      ovStart.addEventListener('click', startGame);
+
+      // ----- Spawning & difficulty -----
+      function maybeLevelUp() {
+        const thresholds = [20, 50, 100, 160, 230, 310, 400];
+        const nextLevel = thresholds.findIndex(t => state.score < t) + 1 || thresholds.length + 1;
+        if (nextLevel !== state.level) {
+          state.level = nextLevel;
+          state.enemyInterval = Math.max(350, 900 - (state.level - 1) * 80);
+          updateUI();
+        }
+      }
+
+      function spawnEnemy() {
+        const w = rand(20, 45);
+        const h = rand(14, 30);
+        const speed = Math.random() * w + 10 + state.level * h / state.shotCooldown;
+        const x = Math.random() * (canvas.clientWidth - w);
+        const y = -h - 2;
+        const hp = Math.random() < Math.min(0.15 + state.level * 0.03, 0.6) ? 2 : 1;
+        state.enemies.push({ x, y, w, h, vy: speed, hp, color: hp > 1 ? '#fbbf24' : '#9ca3af' });
+      }
+
+      // ----- Shooting -----
+      function shoot() {
+        const now = state.time;
+        if (now - state.lastShot < state.shotCooldown) return;
+        state.lastShot = now;
+        const bw = 3, bh = 10;
+        state.bullets.push({ x: player.x + player.w / 2 - bw / 2, y: player.y - bh, w: bw, h: bh, vy: -520 });
+      }
+
+      // ----- Main loop -----
+      let lastFrameTime = performance.now();
+
+      function loop(ts) {
+        if (!state.running || state.paused) return;
+        resizeCanvasToDisplaySize();
+        const dt = Math.min(0.035, (ts - lastFrameTime) / 1000); // clamp dt
+        lastFrameTime = ts;
+        state.time += dt * 1000;
+
+        // Input -> player movement
+        let move = 0;
+        if (state.keys.left) move -= 1;
+        if (state.keys.right) move += 1;
+        player.x += move * player.speed * dt;
+        player.x = clamp(player.x, 0, canvas.clientWidth - player.w);
+
+        if (state.keys.fire) shoot();
+
+        // Spawn enemies
+        state.nextEnemyIn -= dt * 1000;
+        if (state.nextEnemyIn <= 0) {
+          spawnEnemy();
+          state.nextEnemyIn = state.enemyInterval * (0.6 + Math.random() * 0.8);
+        }
+
+        // Update bullets
+        for (let i = state.bullets.length - 1; i >= 0; i--) {
+          const b = state.bullets[i];
+          b.y += b.vy * dt;
+          if (b.y + b.h < -20) state.bullets.splice(i, 1);
+        }
+
+        // Update enemies
+        for (let i = state.enemies.length - 1; i >= 0; i--) {
+          const e = state.enemies[i];
+          e.y += e.vy * dt;
+
+          // Collision with player
+          if (rectsOverlap(e, player)) {
+            state.enemies.splice(i, 1);
+            state.lives -= 1;
+            if (state.lives <= 0) { updateUI(); draw(); return gameOver(); }
+            updateUI();
+            continue;
+          }
+
+          // Off screen -> lose a life
+          if (e.y > canvas.clientHeight + 10) {
+            state.enemies.splice(i, 1);
+            state.lives -= 1;
+            if (state.lives <= 0) { updateUI(); draw(); return gameOver(); }
+            updateUI();
+          }
+        }
+
+        // Bullet vs Enemy
+        for (let i = state.enemies.length - 1; i >= 0; i--) {
+          const e = state.enemies[i];
+          for (let j = state.bullets.length - 1; j >= 0; j--) {
+            const b = state.bullets[j];
+            if (rectsOverlap(e, b)) {
+              state.bullets.splice(j, 1);
+              e.hp -= 1;
+              if (e.hp <= 0) {
+                state.enemies.splice(i, 1);
+                state.score += 5;
+                maybeLevelUp();
+              } else {
+                // hit feedback
+                e.color = '#fca5a5';
+              }
+              break;
+            }
+          }
+        }
+
+        // Draw
+        draw();
+
+        // next frame
+        requestAnimationFrame(loop);
+      }
+
+      function draw() {
+        // clear
+        ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+        // subtle starfield background
+        drawStars();
+
+        // player
+        ctx.fillStyle = player.color;
+        // simple ship: body + cockpit
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+        ctx.fillRect(player.x + player.w * 0.4, player.y - 6, player.w * 0.2, 6);
+
+        // bullets
+        ctx.fillStyle = '#e5e7eb';
+        for (const b of state.bullets) {
+          ctx.fillRect(b.x, b.y, b.w, b.h);
+        }
+
+        // enemies
+        for (const e of state.enemies) {
+          ctx.fillStyle = e.color;
+          ctx.fillRect(e.x, e.y, e.w, e.h);
+          // tiny hp line
+          if (e.hp > 1) {
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(e.x, e.y - 3, e.w, 2);
+          }
+        }
+
+        // HUD (backup)
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fillRect(8, 8, 140, 30);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+        ctx.fillText(`Score ${state.score}  •  L ${state.lives}  •  Lv ${state.level}`, 14, 28);
+      }
+
+      // simple starfield
+      let starSeed = 0;
+      function drawStars() {
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        starSeed += 0.2;
+        ctx.globalAlpha = 0.9;
+        for (let i = 0; i < 90; i++) {
+          const x = (i * 97 + starSeed * 3) % w;
+          const y = (i * 53 + starSeed * 5) % h;
+          const r = (i % 3 === 0) ? 1.6 : 1;
+          ctx.fillStyle = i % 9 === 0 ? '#ffffff' : '#cbd5e17a';
+          ctx.fillRect(x, y, r, r);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // Initial overlay
+      showOverlay(
+        'Mini Space Blaster',
+        'Steuere mit <span class="kbd">←</span> <span class="kbd">→</span> und schieße mit <span class="kbd">Leertaste</span>. ' +
+        'Vermeide Kollisionen, jeder durchgerutschte Block kostet ein Leben. Punkte gibt es fürs Abschießen.',
+        'Starten'
+      );
+      updateUI();
+
+    })();
+  </script>
+</body>
+
+</html>
