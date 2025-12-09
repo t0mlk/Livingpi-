@@ -1,0 +1,32 @@
+# -------------------------------------------------------------------
+# Composer und Abhängigkeiten
+# -------------------------------------------------------------------
+
+# Schließt den gesamten 'vendor'-Ordner aus, da alle Dateien durch
+# 'composer install' auf dem Zielsystem neu erstellt werden können.
+/vendor/
+
+# Die Composer-Executable-Datei selbst (nicht notwendig)
+composer.phar
+
+
+# -------------------------------------------------------------------
+# Sensible Konfigurationsdateien (Zugangsdaten)
+# -------------------------------------------------------------------
+
+# SCHLÜSSELWICHTIG: Ihre Datenbankverbindung enthält wahrscheinlich
+# Passwörter und sollte niemals auf einem öffentlichen Repository liegen.
+db_verbindung.php
+
+
+# -------------------------------------------------------------------
+# Lokale Entwicklungsumgebung und Caches
+# -------------------------------------------------------------------
+
+# Falls Sie Visual Studio Code verwenden, ignoriert dies den Ordner
+.vscode/
+
+# Ignoriert temporäre PHP-Dateien und Session-Daten
+*.tmp
+*.log
+*.session
